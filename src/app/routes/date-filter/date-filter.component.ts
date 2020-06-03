@@ -44,14 +44,14 @@ export class DateFilterComponent implements OnInit {
       html: DateFilterConfigExampleComponentHTML,
       css: DateFilterConfigExampleComponentCSS
     },
-    {
-      title: 'Apply date filter for Visualization',
-      content: [],
-      for: DateFilterVisComponent,
-      ts: DateFilterVisComponentSRC,
-      html: DateFilterVisComponentHTML,
-      css: DateFilterVisComponentCSS
-    }
+    // {
+    //   title: 'Apply date filter for Visualization',
+    //   content: [],
+    //   for: DateFilterVisComponent,
+    //   ts: DateFilterVisComponentSRC,
+    //   html: DateFilterVisComponentHTML,
+    //   css: DateFilterVisComponentCSS
+    // }
   ]
 
   ngOnInit() {

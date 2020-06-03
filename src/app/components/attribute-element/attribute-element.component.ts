@@ -3,12 +3,22 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { AttributeElements } from '@gooddata/react-components';
+// import { AttributeElements } from '@gooddata/react-components';
 import { employeeNameIdentifier, projectId } from '../../../utils/fixtures';
+
+import { AttributeElements } from "@gooddata/sdk-ui-filters";
+import { attributeDisplayFormRef } from "@gooddata/sdk-model";
+import { Ldm } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 
 interface AttributeElement {
   title: any;
   uri: any;
+  backend?: any;
+  workspace?: any;
 }
 
 export class AttributeFilterItem extends React.Component<AttributeElement> {
@@ -43,11 +53,11 @@ export class AttributeElementComponent implements OnInit, OnChanges, OnDestroy, 
   isLoading: any;
   offset: any;
   count: any;
-  total: any;
+  totalCount: any;
   nextOffset: any;
   loadMore: any;
   validElements: any[];
-  disabled: boolean = this.isLoading || this.offset+ this.count === this.total;
+  disabled: boolean = this.isLoading || this.offset + this.count === this.totalCount;
   
 
   protected getRootDomNode() {
@@ -57,9 +67,7 @@ export class AttributeElementComponent implements OnInit, OnChanges, OnDestroy, 
   }
 
   buildAttributeFilterItem(item) {
-    const {
-      element: { title, uri },
-    } = item;
+    const { title, uri } = item;
 
     return React.createElement(AttributeFilterItem, {
       key: uri,
@@ -69,33 +77,26 @@ export class AttributeElementComponent implements OnInit, OnChanges, OnDestroy, 
   }
   
   render() {
-    ReactDOM.render(React.createElement(AttributeElements, {
-      identifier: employeeNameIdentifier,
-      projectId: projectId,
-      options: {
-        limit: 20
-      }
-    }, ({
-      validElements,
-      loadMore,
-      isLoading,
-      error
-    }) => {
-      const {
-        offset = null,
-        count = null,
-        total = null
-      } = validElements ? validElements.paging : {};
+    ReactDOM.render(React.createElement(AttributeElements, 
+      {
+        displayForm: attributeDisplayFormRef(Ldm.EmployeeName.Default),
+        backend: backend,
+        workspace: workspace,
+        limit: 20,
+      }, ({ validElements, loadMore, isLoading, error }) => {
+        const { offset = null, items = null, totalCount = null } = validElements ? validElements : {};
 
+      console.log(validElements);
       if (error) {
         return React.createElement("div", null, error);
       }
+      const count = items ? items.length : undefined;
 
       return this.loadMore = loadMore,
         this.isLoading = isLoading.toString(),
         this.offset = offset,
         this.count = count,
-        this.total = total,
+        this.totalCount = totalCount,
         this.nextOffset = offset + count,
         React.createElement("div", null,
           React.createElement("div", null, validElements ? validElements.items.map(this.buildAttributeFilterItem) : null),

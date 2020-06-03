@@ -3,13 +3,22 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { PivotTable, Model } from '@gooddata/react-components';
+// import { PivotTable, Model } from '@gooddata/react-components';
+
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { Ldm, LdmExt } from "../../../ldm";
+import { newMeasureValueFilter } from "@gooddata/sdk-model";
+import { newPositiveAttributeFilter, newNegativeAttributeFilter } from "@gooddata/sdk-model";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
 
 import { projectId, locationNameDisplayFormIdentifier, franchisedSalesIdentifier }
   from '../../../utils/fixtures';
 
 export interface PivotTableBucketProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   measures?: any[];
   rows?: any[];
   columns?: any[];
@@ -34,12 +43,17 @@ export class MeasureValueFilterShownInPercentComponent implements OnInit, OnDest
   greaterDataShownInPercent: string;
   isActive: boolean;
   filters: any[];
-  totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSales').title("Franchised Sales");
-  totalSalesRatio = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSalesRatio').title("Franchised Sales %").ratio();
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  greaterThanFilter = Model.measureValueFilter('franchisedSalesRatio').condition("GREATER_THAN", {
-    value: 7000000,
-  });
+
+  totalSales = [LdmExt.FranchisedSales, LdmExt.FranchisedSalesWithRatio];
+  locationResort = [LdmExt.LocationName];
+  greaterThanFilter = newMeasureValueFilter(LdmExt.FranchisedSalesWithRatio, "GREATER_THAN", 7000000);
+
+  // totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSales').title("Franchised Sales");
+  // totalSalesRatio = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSalesRatio').title("Franchised Sales %").ratio();
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  // greaterThanFilter = Model.measureValueFilter('franchisedSalesRatio').condition("GREATER_THAN", {
+  //   value: 7000000,
+  // });
 
   state = {
     isActive: false,
@@ -124,9 +138,10 @@ export class MeasureValueFilterShownInPercentComponent implements OnInit, OnDest
 
   protected getPivotTableProps(filters): PivotTableBucketProps {
     return {
-      projectId: projectId,
-      measures: [this.totalSales, this.totalSalesRatio],
-      rows: [this.locationResort],
+      workspace: workspace,
+      backend: backend,
+      measures: this.totalSales,
+      rows: this.locationResort,
       filters: filters
     };
   }

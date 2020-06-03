@@ -65,14 +65,14 @@ export class AttributeFilterComponentsComponent implements OnInit {
       html: NewAttributeFilterComponentHTML,
       css: NewAttributeFilterComponentCSS
     },
-    {
-      title: 'Attribute filter example defined by filter definition, including selection',
-      description: [],
-      for: AttributeFilterDefinitionByURIComponent,
-      ts: AttributeFilterDefinitionByURIComponentSRC,
-      html: AttributeFilterDefinitionByURIComponentHTML,
-      css: AttributeFilterDefinitionByURIComponentCSS
-    },
+    // {
+    //   title: 'Attribute filter example defined by filter definition, including selection',
+    //   description: [],
+    //   for: AttributeFilterDefinitionByURIComponent,
+    //   ts: AttributeFilterDefinitionByURIComponentSRC,
+    //   html: AttributeFilterDefinitionByURIComponentHTML,
+    //   css: AttributeFilterDefinitionByURIComponentCSS
+    // },
     {
       title: 'Custom Attribute Filter using Attribute Elements component',
       description: [

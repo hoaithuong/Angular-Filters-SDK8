@@ -3,45 +3,43 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { AttributeFilter, Model } from '@gooddata/react-components';
+// import { AttributeFilter, Model } from '@gooddata/react-components';
 import { VisualizationInput } from '@gooddata/typings';
 
-import {
-  locationResortIdentifier,
-  locationResortUri,
-  employeeNameDisplayFormUri,
-  employeeNameIdentifier,
-  projectId
-} from '../../../utils/fixtures';
+import { AttributeFilter } from "@gooddata/sdk-ui-filters";
+import { attributeIdentifier,  newPositiveAttributeFilter } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 
 let self: any;
 
 interface AttributeFilterProps {
-  projectId: any;
   identifier: any;
   fullscreenOnMobile: boolean;
   onApply: any;
-}
-
-interface AttributeFilterByURIProps {
-  projectId: any;
-  uri: any;
-  fullscreenOnMobile: boolean;
-  onApply: any;
+  backend: any;
+  workspace: any;
+  titleWithSelection: boolean;
 }
 
 interface AttributeFilterDefinitionProps {
-  projectId: any;
   filter: any;
   fullscreenOnMobile: boolean;
   onApply: any;
+  backend: any;
+  workspace: any;
 }
 
 interface AttributeFilterOnApplyWithFilterDefinitionProps {
-  projectId: any;
   filter: any;
   fullscreenOnMobile: boolean;
   onApplyWithFilterDefinition: any;
+  backend: any;
+  workspace: any;
+  onApply: any;
 }
 
 @Component({
@@ -56,47 +54,11 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
   public rootFilterDefinition: string;
   public rootOnApplyWithFilterDefinition: string;
 
-  filter = Model.positiveAttributeFilter(employeeNameIdentifier, ['Abbie Adams'], true);
+  filter = newPositiveAttributeFilter(Ldm.EmployeeName.Default, ['Abbie Adams']);
 
-  onApply(filter) {
-    self.message = null;
-    if (filter.in) {
-      self.filters = self.filterPositiveAttribute(filter);
-    } else {
-      self.filters = self.filterNegativeAttribute(filter);
-    }
-    console.log('NewAttributeFilterComponent onApply', filter);
-  }
-
-  public filterPositiveAttribute(filter) {
-    const filters = [
-      {
-        positiveAttributeFilter: {
-          displayForm: {
-            identifier: filter.id,
-          },
-          in: filter.in.map(element => `${locationResortUri}/elements?id=${element}`),
-        },
-      },
-    ];
-    if (filter.in.length === 0) {
-      self.message = 'The filter must have at least one item selected';
-    }
-    return filters;
-  }
-
-  public filterNegativeAttribute(filter) {
-    const filters = [
-      {
-        negativeAttributeFilter: {
-          displayForm: {
-            identifier: filter.id,
-          },
-          notIn: filter.notIn.map(element => `${locationResortUri}/elements?id=${element}`),
-        },
-      },
-    ];
-    return filters;
+  onApply(...params) {
+    // tslint:disable-next-line:no-console
+    console.log("AttributeFilterComponentExample onApply", ...params);
   }
 
   onApplyWithFilterDefinition = filter => {
@@ -105,8 +67,8 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
     const isPositiveFilter = VisualizationInput.isPositiveAttributeFilter(filter);
     const inType = isPositiveFilter ? 'in' : 'notIn';
     const filterItems = isPositiveFilter
-      ? filter.positiveAttributeFilter[inType]
-      : filter.negativeAttributeFilter[inType];
+      ? filter.newPositiveAttributeFilter[inType]
+      : filter.newNegativeAttributeFilter[inType];
     if (!filterItems.length && isPositiveFilter) {
       self.message = 'The filter must have at least one item selected';
     } else {
@@ -120,17 +82,12 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
     return node;
   }
 
-  protected getRootFilterByURI() {
-    const node = document.getElementById(this.rootFilterByURI);
-    invariant(node, `Node rootFilterByURI not found!`);
-    return node;
-  }
-
   protected getRootFilterDefinition() {
     const node = document.getElementById(this.rootFilterDefinition);
     invariant(node, `Node rootFilterDefinition not found!`);
     return node;
   }
+
 
   protected getRootOnApplyWithFilterDefinition() {
     const node = document.getElementById(this.rootOnApplyWithFilterDefinition);
@@ -140,25 +97,21 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
 
   protected getProps(): AttributeFilterProps {
     return {
-      projectId: projectId,
-      identifier: locationResortIdentifier,
+      workspace: workspace,
+      backend: backend,
+      identifier: attributeIdentifier(Ldm.EmployeeName.Default),
       onApply: this.onApply,
       fullscreenOnMobile: false,
+      titleWithSelection: true,
     };
   }
 
-  protected getAttributeFilterByUri(): AttributeFilterByURIProps {
-    return {
-      projectId: projectId,
-      uri: employeeNameDisplayFormUri,
-      onApply: this.onApply,
-      fullscreenOnMobile: false,
-    };
-  }
+  // attributefilter is not use attributeuri in SDK8
 
   protected getFilterDefinition(): AttributeFilterDefinitionProps {
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       filter: this.filter,
       onApply: this.onApply,
       fullscreenOnMobile: false,
@@ -167,19 +120,17 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
 
   protected getOnApplyWithFilterDefinition(): AttributeFilterOnApplyWithFilterDefinitionProps {
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       filter: this.filter,
       onApplyWithFilterDefinition: this.onApplyWithFilterDefinition,
       fullscreenOnMobile: false,
+      onApply: this.onApply,
     };
   }
 
   private isMounted(): boolean {
     return !!this.rootDomID;
-  }
-
-  private isMounted1(): boolean {
-    return !!this.rootFilterByURI;
   }
 
   private isMounted2(): boolean {
@@ -193,12 +144,6 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
   protected render() {
     if (this.isMounted()) {
       ReactDOM.render(React.createElement(AttributeFilter, this.getProps()), this.getRootDomNode());
-    }
-  }
-
-  protected renderAttributeFilterByURI() {
-    if (this.isMounted1()) {
-      ReactDOM.render(React.createElement(AttributeFilter, this.getAttributeFilterByUri()), this.getRootFilterByURI());
     }
   }
 
@@ -225,14 +170,12 @@ export class AttributeFilterComponent implements OnInit, OnDestroy, OnChanges, A
 
   ngOnChanges() {
     this.render();
-    this.renderAttributeFilterByURI();
     this.renderFilterDefinition();
     this.renderAttributeFilterApplyWithFilterDefinition();
   }
 
   ngAfterViewInit() {
     this.render();
-    this.renderAttributeFilterByURI();
     this.renderFilterDefinition();
     this.renderAttributeFilterApplyWithFilterDefinition();
   }

@@ -3,13 +3,20 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { PivotTable, Model } from '@gooddata/react-components';
+// import { PivotTable, Model } from '@gooddata/react-components';
 
-import { projectId, locationNameDisplayFormIdentifier, franchisedSalesIdentifier }
-  from '../../../utils/fixtures';
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { Ldm, LdmExt } from "../../../ldm";
+import { newMeasureValueFilter } from "@gooddata/sdk-model";
+import { newPositiveAttributeFilter, newNegativeAttributeFilter } from "@gooddata/sdk-model";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 
 export interface PivotTableBucketProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   measures?: any[];
   rows?: any[];
   columns?: any[];
@@ -35,17 +42,23 @@ export class MeasureValueFilterExamplesComponent implements OnInit, OnDestroy, O
   public greater: string;
   public bewteen: string;
   isActive: boolean;
-  totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSales').title("Franchised Sales");
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  attributes = [Model.attribute(locationNameDisplayFormIdentifier).localIdentifier("locationName")];
-  greaterThanFilter = Model.measureValueFilter('franchisedSales').condition("GREATER_THAN", {
-    value: 7000000,
-  });
 
-  betweenFilter = Model.measureValueFilter('franchisedSales').condition("BETWEEN", {
-    from: 5000000,
-    to: 8000000,
-  });
+  totalSales = [LdmExt.FranchisedSales];
+  locationResort = [Ldm.LocationName.Default];
+  greaterThanFilter = newMeasureValueFilter(LdmExt.FranchisedSales, "GREATER_THAN", 7000000);
+  betweenFilter = newMeasureValueFilter(LdmExt.FranchisedSales, "BETWEEN", 5000000, 8000000);
+
+  // totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSales').title("Franchised Sales");
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  // attributes = [Model.attribute(locationNameDisplayFormIdentifier).localIdentifier("locationName")];
+  // greaterThanFilter = Model.measureValueFilter('franchisedSales').condition("GREATER_THAN", {
+  //   value: 7000000,
+  // });
+
+  // betweenFilter = Model.measureValueFilter('franchisedSales').condition("BETWEEN", {
+  //   from: 5000000,
+  //   to: 8000000,
+  // });
 
   state = {
     isActive: false,
@@ -165,9 +178,10 @@ export class MeasureValueFilterExamplesComponent implements OnInit, OnDestroy, O
 
   protected getPivotTableProps(filters): PivotTableBucketProps {
     return {
-      projectId: projectId,
-      measures: [this.totalSales],
-      rows: [this.locationResort],
+      workspace: workspace,
+      backend: backend,
+      measures: this.totalSales,
+      rows: this.locationResort,
       filters: filters
     };
   }

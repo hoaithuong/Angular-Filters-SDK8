@@ -3,15 +3,22 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { BarChart, Model } from '@gooddata/react-components';
+// import { BarChart, Model } from '@gooddata/react-components';
 
-import { projectId, locationNameDisplayFormIdentifier, numberOfChecksIdentifier, totalSalesIdentifier }
-  from '../../../utils/fixtures';
+import { BarChart } from "@gooddata/sdk-ui-charts";
+import { newMeasureValueFilter, measureIdentifier, idRef } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { newPositiveAttributeFilter, newNegativeAttributeFilter } from "@gooddata/sdk-model";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 
 export interface BarChartBucketProps {
-  projectId: any;
-  measures?: any[];
-  viewBy?: any;
+  backend: any;
+  workspace: any;
+  measures: any[];
+  viewBy?: any[];
   config?: any;
   filters?: any[];
 }
@@ -34,13 +41,18 @@ export class MeasureValueFilterStackTo100PercentComponent implements OnInit, OnD
   greaterStacktoPercent: string;
   isActive: boolean;
   filters: any[];
-  totalSales = Model.measure(totalSalesIdentifier).localIdentifier('totalSales').title("Total Sales");
-  numOfChecks = Model.measure(numberOfChecksIdentifier).localIdentifier('numOfChecks').title("Number of Checks");
-  measures = [this.totalSales, this.numOfChecks];
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  greaterThanFilter = Model.measureValueFilter('totalSales').condition("GREATER_THAN", {
-    value: 7000000,
-  });
+
+  measures = [LdmExt.TotalSales2, LdmExt.numberOfChecks];
+  locationResort = [Ldm.LocationName.Default];
+  greaterThanFilter = newMeasureValueFilter(idRef(measureIdentifier(LdmExt.TotalSales2)), "GREATER_THAN", 7000000);
+
+  // totalSales = Model.measure(totalSalesIdentifier).localIdentifier('totalSales').title("Total Sales");
+  // numOfChecks = Model.measure(numberOfChecksIdentifier).localIdentifier('numOfChecks').title("Number of Checks");
+  // measures = [this.totalSales, this.numOfChecks];
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  // greaterThanFilter = Model.measureValueFilter('totalSales').condition("GREATER_THAN", {
+  //   value: 7000000,
+  // });
 
   state = {
     isActive: false,
@@ -140,7 +152,8 @@ export class MeasureValueFilterStackTo100PercentComponent implements OnInit, OnD
 
   protected getBarChartProps(filters): BarChartBucketProps {
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       measures: this.measures,
       viewBy: this.locationResort,
       config: this.config,

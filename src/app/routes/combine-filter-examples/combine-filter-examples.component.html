@@ -1,0 +1,40 @@
+<app-header></app-header>
+<div style="margin-left: 100px;">
+  <mat-sidenav-container style="background-color: #fafafa;">
+    <mat-sidenav mode="side" opened style="border-right: solid 0px; background-color: #fafafa;">
+      <mat-nav-list style="border: 1px solid #efe9e9; border-radius: 5px;margin: auto; background-color: #FFFFFF;">
+        <a class ='gd-tab' mat-list-item [routerLink]="'/'"> Basic Components </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/pivot-table'"> Pivot Table </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/visualization/visualization-by-uri'"> Visualization Component </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/sorting'"> Sorting </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/time-over-time-comparison'"> Time Over Time Comparision </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/attribute-filter-components'"> Attribute Filter Component </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/date-filter-component'"> Date Filter Component </a>
+        <a class ='gd-tab is-selected' mat-list-item [routerLink]="'/combine/examples'"> Combine Filter Component </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/arithmetic-measures'"> Arithmetic Measures </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/measure-value-filter/filter-by-measure-value'"> Measure Value Filter </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/advanced/global-filters'"> Advanced Use Cases </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/export/chart'"> Export </a>
+        <a class ='gd-tab' mat-list-item [routerLink]="'/drilling'"> Drilling </a>
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <div style="margin-left: 20px;margin-right: 150px;">
+        <router-outlet></router-outlet>
+        <div class='gd-tabs'>
+            <a class='gd-tab is-active' mat-list-item [routerLink]="'/combine/examples'"> Combine Filter Examples </a>
+            <a class='gd-tab' mat-list-item [routerLink]="'/combine/component-examples'"> Combine Filter Component Examples </a>
+        </div>
+        <h2>Combine Filter Examples</h2>
+        <p>These examples show how to use the Combine Filter component.</p>
+        <!-- <hr class="separator"/> -->
+        <div class='example-wrapper'>
+          <div *ngFor="let item of combineFilterArray"> 
+            <hr class="separator"/>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.content }}</p>
+            <app-example-with-source [for]='item.for' [ts]='item.ts' [html]='item.html' [css]='item.css'></app-example-with-source>
+          </div>
+        </div>
+      </div>
+    </mat-sidenav-content>

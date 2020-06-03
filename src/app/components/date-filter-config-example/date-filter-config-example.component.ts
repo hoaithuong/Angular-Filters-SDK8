@@ -3,18 +3,19 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { Model, DateFilter, PivotTable, DateFilterHelpers } from '@gooddata/react-components';
-import {
-  totalSalesIdentifier,
-  locationResortIdentifier,
-  dateDatasetIdentifier,
-  projectId,
-  MonthYears,
-} from '../../../utils/fixtures';
+
+import { DateFilter, DateFilterHelpers, ExtendedDateFilters } from "@gooddata/sdk-ui-filters";
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
 
 let self: any;
 
 interface DateFilterExampleBucketProps {
+  backend: any;
+  workspace: any;
   filterOptions: any;
   availableGranularities: any;
   excludeCurrentPeriod: boolean;
@@ -25,15 +26,13 @@ interface DateFilterExampleBucketProps {
 }
 
 export interface PivotTableBucketProps {
+  backend: any;
+  workspace: any;
   measures: any[];
   rows?: any;
   columns?: any;
   filters?: any[];
   sortBy?: any[];
-}
-
-export interface PivotTableProps extends PivotTableBucketProps {
-  projectId: string;
 }
 
 const dateFrom = new Date();
@@ -49,14 +48,16 @@ const availableGranularities = ['GDC.time.date', 'GDC.time.month', 'GDC.time.wee
 export class DateFilterConfigExampleComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
   message: string;
 
-  totalSales = [Model.measure(totalSalesIdentifier)
-    .format('#,##0')
-    .alias('$ Total Sales')];
+  // totalSales = [Model.measure(totalSalesIdentifier)
+  //   .format('#,##0')
+  //   .alias('$ Total Sales')];
 
-  rows = [
-    Model.attribute(MonthYears),
-    Model.attribute(locationResortIdentifier),
-  ];
+  // rows = [
+  //   Model.attribute(MonthYears),
+  //   Model.attribute(locationResortIdentifier),
+  // ];
+  totalSales = [LdmExt.TotalSales1];
+  rows = [Ldm.LocationName.Default, Ldm.DateYear];
 
   defaultDateFilterOptions = {
     allTime: {
@@ -241,8 +242,11 @@ export class DateFilterConfigExampleComponent implements OnInit, OnDestroy, OnCh
     },
   };
 
-  selectedFilterOption = this.defaultDateFilterOptions.allTime;
-  excludeCurrentPeriod = false;
+  // selectedFilterOption = this.defaultDateFilterOptions.allTime;
+  // excludeCurrentPeriod = false;
+  selectedFilterOption= this.defaultDateFilterOptions.allTime!;
+  excludeCurrentPeriod= false;
+
   public rootDomID: string;
   public PivotDomID: string;
   filters: any[];
@@ -259,19 +263,24 @@ export class DateFilterConfigExampleComponent implements OnInit, OnDestroy, OnCh
     return node;
   }
 
-  onApply = (selectedFilterOption, excludeCurrentPeriod) => {
-    this.selectedFilterOption = selectedFilterOption;
-    this.excludeCurrentPeriod = excludeCurrentPeriod;
-    console.log(
-      'DateFilterExample onApply',
-      'selectedFilterOption:',
-      selectedFilterOption,
-      'excludeCurrentPeriod:',
-      excludeCurrentPeriod,
-    );
+  onApply = (
+    selectedFilterOption: ExtendedDateFilters.IAllTimeDateFilter,
+    excludeCurrentPeriod: boolean,
+) => {
+  this.selectedFilterOption = selectedFilterOption;
+  this.excludeCurrentPeriod = excludeCurrentPeriod;
+  
+  console.log(
+    "DateFilterExample onApply",
+    "selectedFilterOption:",
+    selectedFilterOption,
+    "excludeCurrentPeriod:",
+    excludeCurrentPeriod,
+  );
+    
     const dateFilter = DateFilterHelpers.mapOptionToAfm(
       selectedFilterOption,
-      { identifier: dateDatasetIdentifier },
+      { identifier: LdmExt.dateDatasetIdentifier },
       excludeCurrentPeriod,
     );
     self.filters = dateFilter ? [dateFilter] : [];
@@ -280,6 +289,8 @@ export class DateFilterConfigExampleComponent implements OnInit, OnDestroy, OnCh
 
   protected getDateFilterProps(): DateFilterExampleBucketProps {
     return {
+      workspace: workspace,
+      backend: backend,
       excludeCurrentPeriod: this.excludeCurrentPeriod,
       selectedFilterOption: this.selectedFilterOption,
       filterOptions: this.defaultDateFilterOptions,
@@ -306,9 +317,10 @@ export class DateFilterConfigExampleComponent implements OnInit, OnDestroy, OnCh
     ReactDOM.render(React.createElement(PivotTable, this.getPivotTableProps()), this.getLineDataNode());
   }
 
-  protected getPivotTableProps(): PivotTableProps {
+  protected getPivotTableProps(): PivotTableBucketProps {
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       measures: this.totalSales,
       rows: this.rows,
       filters: self.filters,

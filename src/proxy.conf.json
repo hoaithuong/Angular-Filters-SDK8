@@ -1,6 +1,6 @@
 {
     "/gdc": {
-        "target": "https://developer.na.gooddata.com",
+        "target": "https://staging3.intgdc.com",
        
         "changeOrigin": true,
         "logLevel": "debug",
@@ -8,7 +8,7 @@
         "secure": false,
         
         "headers": {
-            "host": "developer.na.gooddata.com", 
+            "host": "staging3.intgdc.com", 
             "origin": null
         }
     }

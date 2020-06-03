@@ -2,13 +2,13 @@
 
 const demoProject = {
     "https://secure.gooddata.com": "k26dtejorcqlqf11crn6imbeevp2q4kg",
-    "https://staging3.intgdc.com": "ht3owbpk6h0yfjtkcsgva3osu3z7paol",
+    "https://staging3.intgdc.com": "xp9yfghe4na21w27cyrnyrwx5si2vk6e",
     "https://staging2.intgdc.com": "exveshu0intwbr4nk6ao8ft6vesjiqus",
     "https://staging.intgdc.com": "xskxypodp5s4p2t6x99b2szivf8qi3st",
     "https://developer.na.gooddata.com": "xms7ga4tf3g3nzucd8380o2bev8oeknp",
 };
 
-const backendUrl = "https://developer.na.gooddata.com"; // eslint-disable-line no-undef
+const backendUrl = "https://staging3.intgdc.com"; // eslint-disable-line no-undef
 const demoProjectId = demoProject[backendUrl];
 if (!demoProjectId) {
     console.error(`[fixtures.js] ProjectId for backend "${backendUrl}" is not in `, demoProject); // eslint-disable-line no-console
@@ -21,6 +21,7 @@ console.log("The /gdc proxy is connected to: ", backendUrl, " with projectId: ",
 export const backendUrlForInfo = backendUrl;
  //export const projectId = 'ht3owbpk6h0yfjtkcsgva3osu3z7paol';
 export const projectId=demoProjectId;
+export const workspace = demoProjectId;  // add more
  
 export const averageCheckSizeByServer = "afewRzGAersh";
 export const averageDailyTotalSales = "aagJGHg1bxap";

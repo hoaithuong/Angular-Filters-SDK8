@@ -3,29 +3,38 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit ,OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { 
-  projectId, 
-  visualizationhasMfvIdentifier, 
-  totalSalesMFVLocalIdentifier
-} from "../../../utils/fixtures";
-import { 
-  Visualization,
-  Model,
-  MeasureValueFilter 
-} from '@gooddata/react-components';
+import { InsightView } from "@gooddata/sdk-ui-ext";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+import { MeasureValueFilter } from "@gooddata/sdk-ui-filters";
+import { measureLocalId } from "@gooddata/sdk-model";
+
+// import { 
+//   projectId, 
+//   visualizationhasMfvIdentifier, 
+//   totalSalesMFVLocalIdentifier
+// } from "../../../utils/fixtures";
+// import { 
+//   Visualization,
+//   Model,
+//   MeasureValueFilter 
+// } from '@gooddata/react-components';
 
 export interface VisualizationHasMFVProps {
-  projectId: any;
-  identifier:any;  
-  config?: any;
-  filters?:any[];
+  backend: any;
+  workspace: any;
+  insight: any;
 }
 
 export interface MeasureValueFilterProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   onApply: any;
   filter: any;
   buttonTitle: string;
+  measureIdentifier: any;
 }
 
 @Component({
@@ -33,6 +42,7 @@ export interface MeasureValueFilterProps {
   templateUrl: './visualization-has-mvf.component.html',
   styleUrls: ['./visualization-has-mvf.component.css']
 })
+
 export class VisualizationHasMvfComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
   ref: React.RefObject<any>;
   public rootDomID: string;
@@ -42,16 +52,21 @@ export class VisualizationHasMvfComponent implements OnInit, OnDestroy, OnChange
   config = {
     maxHeight: 400,
   };
-  defaultMeasureValueFilter = Model.measureValueFilter(totalSalesMFVLocalIdentifier)
+
+  measureTitle = "Franchise Sales";
+  totalSales = [LdmExt.FranchisedSales];
+  // locationResort = [Ldm.LocationName.Default];
+
+  // defaultMeasureValueFilter = Model.measureValueFilter(totalSalesMFVLocalIdentifier)
   state = {
-    filters: [this.defaultMeasureValueFilter],
+    filters: [],
   };
 
   onApply = filter => {
     this.filters = [filter];
     this.filterValue = filter;
     this.state = {
-      filters: [this.defaultMeasureValueFilter]
+      filters: []
     }
     this.render();
   };
@@ -71,19 +86,22 @@ export class VisualizationHasMvfComponent implements OnInit, OnDestroy, OnChange
   protected getMeasureValueProps(): MeasureValueFilterProps {
     const { filters } = this.state;
     return {
-      projectId: projectId,
-      filter: this.filterValue ? this.filterValue : this.defaultMeasureValueFilter,
+      workspace: workspace,
+      backend: backend,
+      filter: this.filterValue ? this.filterValue : filters[0],
       onApply: this.onApply,
-      buttonTitle: "Total Sales",
+      buttonTitle: this.measureTitle,
+      measureIdentifier: measureLocalId(LdmExt.FranchisedSales),
     };
   }
 
   protected getProps(): VisualizationHasMFVProps {
     return {
-      projectId:projectId,
-      identifier: visualizationhasMfvIdentifier,
-      config: this.config,
-      filters: this.filters,
+      workspace: workspace,
+      backend: backend,
+      insight: Ldm.Insights.PivotTableThg,
+      // config: this.config,
+      // filters: this.filters,
     };
   }
   
@@ -94,7 +112,7 @@ export class VisualizationHasMvfComponent implements OnInit, OnDestroy, OnChange
   }
 
   protected renderVisualization() {
-    ReactDOM.render(React.createElement(Visualization, this.getProps()), this.getDataNode());
+    ReactDOM.render(React.createElement(InsightView, this.getProps()), this.getDataNode());
   }
 
   public renderFilterValue() {

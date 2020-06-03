@@ -28,6 +28,9 @@ import { ExportVisualizationComponent } from './routes/export-visualization/expo
 import { DatepickerComponent } from './routes/datepicker/datepicker.component';
 import { ChartConfigComponentsComponent } from './routes/chart-config-components/chart-config-components.component';
 import { DynamicMeasureComponentComponent } from './routes/dynamic-measure-component/dynamic-measure-component.component';
+import { CombineFilterExamplesComponent } from './routes/combine-filter-examples/combine-filter-examples.component';
+import { CombineFilterComponentExamplesComponent } from './routes/combine-filter-component-examples/combine-filter-component-examples.component'
+
 
 const appRoutes: Routes = [
     { path: '', component: BasicComponentsComponent , canActivate: [AuthGuard] },
@@ -56,6 +59,9 @@ const appRoutes: Routes = [
     { path: 'export/visualization', component: ExportVisualizationComponent},
     { path: 'advanced/date-picker', component: DatepickerComponent},
     { path: 'advanced/dynamic-measures', component: DynamicMeasureComponentComponent},
+    { path: 'combine/examples', component: CombineFilterExamplesComponent},
+    { path: 'combine/component-examples', component: CombineFilterComponentExamplesComponent},
+
 
     // otherwise redirect to home
     { path: '**', redirectTo: '' }

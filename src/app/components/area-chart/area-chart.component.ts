@@ -3,27 +3,18 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { AreaChart, Model } from '@gooddata/react-components';
 
-import {
-  projectId,
-  locationResortIdentifier,
-  totalSalesIdentifier,
-  locationStateDisplayFormIdentifier,
-} from '../../../utils/fixtures';
+import { AreaChart } from "@gooddata/sdk-ui-charts";
+import { LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
 
 interface AreaChartBucketProps {
   measures: any[];
   viewBy?: any;
-  stackBy?: any;
-  sortBy?: any[];
-  locale?: any;
-  config?: any;
-  filters?: any[];
-}
-
-interface AreaChartProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
 }
 
 @Component({
@@ -32,12 +23,13 @@ interface AreaChartProps {
 })
 
 export class AreaChartComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
-  measures = [ Model.measure(totalSalesIdentifier).format("#,##0").alias("$ Total Sales")]
-  viewBy = Model.attribute(locationResortIdentifier)
-  stackBy = Model.attribute(locationStateDisplayFormIdentifier)
-  filterLocationResort = [ 
-    Model.positiveAttributeFilter(locationResortIdentifier, ["Irving", "Montgomery", "San Jose", "Deerfield Beach"], true)
-  ]
+  
+  measures = [
+    LdmExt.FranchiseFees,
+    LdmExt.FranchiseFeesAdRoyalty,
+    LdmExt.FranchiseFeesInitialFranchiseFee,
+    LdmExt.FranchiseFeesOngoingRoyalty,
+  ]; 
   config = {
     stackMeasuresToPercent: true,
     colors: ['rgb(195, 49, 73)', 'rgb(168, 194, 86)', 'rgb(213, 214, 0)', 'rgb(65, 69, 195)'],
@@ -62,13 +54,12 @@ export class AreaChartComponent implements OnInit, OnDestroy, OnChanges, AfterVi
     return node;
   }
 
-  protected getProps(): AreaChartProps | AreaChartBucketProps {
+  protected getProps(): AreaChartBucketProps {
     return {
-      projectId: projectId,
       measures: this.measures,
-      viewBy: this.viewBy,
-      stackBy: this.stackBy,
-      filters: this.filterLocationResort
+      viewBy: LdmExt.monthDate,
+      backend: backend,
+      workspace: workspace
     };
   }
 

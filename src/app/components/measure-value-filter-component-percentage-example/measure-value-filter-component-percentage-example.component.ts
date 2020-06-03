@@ -3,25 +3,38 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { PivotTable, Model, MeasureValueFilter } from '@gooddata/react-components';
+// import { PivotTable, Model, MeasureValueFilter } from '@gooddata/react-components';
 import {
   projectId,
   locationNameDisplayFormIdentifier,
   franchisedSalesIdentifier,
 } from '../../../utils/fixtures';
 
+import { MeasureValueFilter } from "@gooddata/sdk-ui-filters";
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { newMeasureValueFilter, measureIdentifier, idRef } from "@gooddata/sdk-model";
+import { measureLocalId } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 export interface PivotTableBucketProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   measures?: any[];
   rows?: any[];
   filters?: any[];
 }
 
 export interface MeasureValueFilterProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   onApply: any;
   filter: any;
   buttonTitle: string;
+  measureIdentifier: any;
+  usePercentage: boolean;
 }
 
 @Component({
@@ -36,21 +49,26 @@ export class MeasureValueFilterComponentPercentageExampleComponent implements On
   ref: React.RefObject<any>;
   filters: any[];
   filterValue: any;
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  totalSales = [Model.measure(franchisedSalesIdentifier)
-    .localIdentifier('franchisedSales')
-    .format("#,##0%")
-    .title("Franchised Sales")];
-  defaultMeasureValueFilter = Model.measureValueFilter('franchisedSales')
+
+  measureTitle = "Franchised Sales Ratio";
+  totalSales = [LdmExt.FranchisedSales];
+  locationResort = [Ldm.LocationName.Default];
+
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  // totalSales = [Model.measure(franchisedSalesIdentifier)
+  //   .localIdentifier('franchisedSales')
+  //   .format("#,##0%")
+  //   .title("Franchised Sales")];
+  // defaultMeasureValueFilter = Model.measureValueFilter('franchisedSales')
   state = {
-    filters: [this.defaultMeasureValueFilter],
+    filters: [],
   };
 
   onApply = filter => {
     this.filters = [filter];
     this.filterValue = filter;
     this.state = {
-      filters: [this.defaultMeasureValueFilter]
+      filters: []
     }
     this.render();
   };
@@ -70,18 +88,22 @@ export class MeasureValueFilterComponentPercentageExampleComponent implements On
   protected getMeasureValueProps(): MeasureValueFilterProps {
     const { filters } = this.state;
     return {
-      projectId: projectId,
-      filter: this.filterValue ? this.filterValue : this.defaultMeasureValueFilter,
+      workspace: workspace,
+      backend: backend,
+      filter: this.filterValue ? this.filterValue : filters[0],
       onApply: this.onApply,
-      buttonTitle: "Franchised Sales Ratio",
+      buttonTitle: this.measureTitle,
+      usePercentage: true,
+      measureIdentifier: measureLocalId(LdmExt.FranchisedSales)
     };
   }
 
   protected getPivotTableProps(): PivotTableBucketProps {
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       measures: this.totalSales,
-      rows: [this.locationResort],
+      rows: this.locationResort,
       filters: this.filters,
     };
   }

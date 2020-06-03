@@ -1,10 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import "@gooddata/react-components/styles/css/main.css";
+/* @import "@gooddata/react-components/styles/css/main.css";
 @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 @import "@gooddata/react-components/styles/css/pivotTable.css";
 @import '@gooddata/react-components/styles/css/dateFilter.css';
-@import "react-datepicker/dist/react-datepicker.css";
+@import "react-datepicker/dist/react-datepicker.css"; */
+@import "@gooddata/sdk-ui-pivot/styles/css/main.css";
+@import "@gooddata/sdk-ui-pivot/styles/css/pivotTable.css";
+@import "@gooddata/sdk-ui-pivot/styles/css/menu.css";
+@import "@gooddata/sdk-ui-charts/styles/css/charts.css";
+@import "@gooddata/sdk-ui-filters/styles/css/main.css";
+@import "@gooddata/sdk-ui-filters/styles/css/attributeFilter.css";
+@import "@gooddata/sdk-ui-filters/styles/css/measureValueFilter.css";
+@import "@gooddata/sdk-ui-filters/styles/css/dateFilter.css";
 /* html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; } */
 .separator {

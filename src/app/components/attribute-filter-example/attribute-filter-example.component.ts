@@ -3,22 +3,28 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { AttributeFilter, LineChart, Model, ErrorComponent } from '@gooddata/react-components';
+// import { AttributeFilter, LineChart, Model, ErrorComponent } from '@gooddata/react-components';
 
-import {
-  totalSalesIdentifier,
-  locationResortIdentifier,
-  locationResortUri,
-  projectId,
-} from '../../../utils/fixtures';
+import { ErrorComponent } from "@gooddata/sdk-ui";
+import { AttributeFilter } from "@gooddata/sdk-ui-filters";
+import { LineChart } from "@gooddata/sdk-ui-charts";
+import { attributeIdentifier, isPositiveAttributeFilter, isAttributeElementsByRef, IPositiveAttributeFilter, INegativeAttributeFilter, IAttributeFilter } from "@gooddata/sdk-model";
+import { newPositiveAttributeFilter, newNegativeAttributeFilter } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
 
 let self: any;
 
 interface AttributeFilterProps {
-  projectId: any;
   identifier: any;
   fullscreenOnMobile: boolean;
   onApply: any;
+  backend: any;
+  workspace: any;
+  titleWithSelection?: boolean;
+  filter?:any;
 }
 
 export interface LineChartBucketProps {
@@ -27,10 +33,8 @@ export interface LineChartBucketProps {
   segmentBy?: any;
   filters?: any[];
   sortBy?: any[];
-}
-
-export interface LineChartProps extends LineChartBucketProps {
-  projectId: string;
+  backend: any;
+  workspace: any;
 }
 
 export interface ErrorProps {
@@ -55,12 +59,10 @@ export class AttributeFilterExampleComponent implements OnInit, OnDestroy, OnCha
   public lineRoomData: string;
   message: string;
   filters: any[];
-
-  totalSales = [Model.measure(totalSalesIdentifier)
-    .format('#,##0')
-    .alias('$ Total Sales')];
-
-  locationResort = Model.attribute(locationResortIdentifier);
+  // state: {
+  //   filters: [],
+  //   error: undefined,
+  // };
 
   protected getRootDomNode() {
     const node = document.getElementById(this.rootDomID);
@@ -76,20 +78,22 @@ export class AttributeFilterExampleComponent implements OnInit, OnDestroy, OnCha
 
   protected getAttributeProps(): AttributeFilterProps {
     return {
-      projectId: projectId,
-      identifier: locationResortIdentifier,
+      workspace: workspace,
+      backend: backend,
+      identifier: attributeIdentifier(Ldm.LocationResort),
       onApply: this.onApply,
       fullscreenOnMobile: false,
-
+      titleWithSelection: false,
     };
   }
 
-  protected getLineChartProps(): LineChartProps {
+  protected getLineChartProps(filters): LineChartBucketProps {
     return {
-      projectId: projectId,
-      measures: this.totalSales,
-      trendBy: this.locationResort,
-      filters: this.filters,
+      workspace: workspace,
+      backend: backend,
+      measures: [LdmExt.TotalSales2],
+      trendBy: Ldm.LocationResort,
+      filters: filters,
     };
   }
 
@@ -103,49 +107,65 @@ export class AttributeFilterExampleComponent implements OnInit, OnDestroy, OnCha
     return !!this.rootDomID;
   }
 
-  onApply(filter) {
+  onApply(filter: IAttributeFilter) {
+    // tslint:disable-next-line:no-console
     self.message = null;
-    if (filter.in) {
-      self.filters = self.filterPositiveAttribute(filter);
+    console.log("AttributeFilterExample onApply", filter);
+
+    if (isPositiveAttributeFilter(filter)) {
+      self.filterPositiveAttribute(filter);
     } else {
-      self.filters = self.filterNegativeAttribute(filter);
+      self.filterNegativeAttribute(filter);
     }
-    self.renderLineChart();
+    self.renderLineChart([filter]);
   }
 
-  public filterPositiveAttribute(filter) {
-    var filters;
-    if (filter.in.length !== 0) {
-      filters = [
-        {
-          positiveAttributeFilter: {
-            displayForm: {
-              identifier: filter.id,
-            },
-            in: filter.in.map(element => `${locationResortUri}/elements?id=${element}`),
-          },
-        },
-      ];
-    } else {
-      return self.message = 'The filter must have at least one item selected';
-    }
+  public filterPositiveAttribute(filter: IPositiveAttributeFilter) {
+    let filters;
+        const {
+            positiveAttributeFilter,
+            positiveAttributeFilter: { displayForm },
+        } = filter;
+        const inElements = filter.positiveAttributeFilter.in;
+        const checkLengthOfFilter = isAttributeElementsByRef(positiveAttributeFilter.in)
+            ? positiveAttributeFilter.in.uris.length !== 0
+            : positiveAttributeFilter.in.values.length !== 0;
+
+        if (checkLengthOfFilter) {
+            filters = [
+                {
+                    positiveAttributeFilter: {
+                        displayForm,
+                        in: inElements,
+                    },
+                },
+            ];
+        } 
+        else {
+          return self.message = 'The filter must have at least one item selected';
+        }
     return filters;
   }
 
-  public filterNegativeAttribute(filter) {
-    var filters;
-    if (filter.notIn.length !== 0) {
-      filters = [
-        {
-          negativeAttributeFilter: {
-            displayForm: {
-              identifier: filter.id,
-            },
-            notIn: filter.notIn.map(element => `${locationResortUri}/elements?id=${element}`),
-          },
-        },
-      ];
-    }
+  public filterNegativeAttribute(filter: INegativeAttributeFilter) {
+    let filters;
+        const {
+            negativeAttributeFilter: { notIn, displayForm },
+        } = filter;
+        const checkLengthOfFilter = isAttributeElementsByRef(notIn)
+            ? notIn.uris.length !== 0
+            : notIn.values.length !== 0;
+
+        if (checkLengthOfFilter) {
+            filters = [
+                {
+                    negativeAttributeFilter: {
+                        displayForm,
+                        notIn,
+                    },
+                },
+            ];
+        }
     return filters;
   }
 
@@ -154,15 +174,17 @@ export class AttributeFilterExampleComponent implements OnInit, OnDestroy, OnCha
       ReactDOM.render(
         React.createElement(AttributeFilter, this.getAttributeProps()), this.getRootDomNode());
     }
-    this.renderLineChart();
+    this.renderLineChart(this.filters);
   }
 
-  public renderLineChart() {
+  public renderLineChart(filters) {
     if (this.message) {
+      ReactDOM.render(React.createElement(LineChart, this.getLineChartProps(filters)), this.getLineDataNode());
       ReactDOM.render(React.createElement(ErrorComponent, this.getErrorProps()), this.getLineDataNode());
     } else {
-      ReactDOM.render(React.createElement(LineChart, this.getLineChartProps()), this.getLineDataNode());
+      ReactDOM.render(React.createElement(LineChart, this.getLineChartProps(filters)), this.getLineDataNode());
     }
+    console.log('12381723s');
   }
 
   ngOnInit() {

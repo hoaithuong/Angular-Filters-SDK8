@@ -3,25 +3,33 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { PivotTable, Model, MeasureValueFilter } from '@gooddata/react-components';
-import {
-  projectId,
-  locationNameDisplayFormIdentifier,
-  franchisedSalesIdentifier,
-} from '../../../utils/fixtures';
+// import { PivotTable, Model, MeasureValueFilter } from '@gooddata/react-components';
+
+import { MeasureValueFilter } from "@gooddata/sdk-ui-filters";
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { newMeasureValueFilter, measureIdentifier, idRef } from "@gooddata/sdk-model";
+import { measureLocalId } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 
 export interface PivotTableBucketProps {
-  projectId: any;
-  measures?: any[];
+  backend: any;
+  workspace: any;
+  measures: any[];
   rows?: any[];
   filters?: any[];
 }
 
 export interface MeasureValueFilterProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   onApply: any;
   filter: any;
   buttonTitle: string;
+  measureIdentifier: any;
 }
 
 @Component({
@@ -36,23 +44,30 @@ export class MeasureValueFilterComponentExampleComponent implements OnInit {
   ref: React.RefObject<any>;
   filters: any[];
   filterValue: any;
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  totalSales = [Model.measure(franchisedSalesIdentifier)
-    .localIdentifier('franchisedSalesIdentifier')
-    .format("#,##0")
-    .title("Franchised Sales")];
-  defaultMeasureValueFilter = Model.measureValueFilter('franchisedSalesIdentifier')
+
+  measureTitle = "Franchised Sales";
+  totalSales = [LdmExt.FranchisedSales];
+  locationResort = [Ldm.LocationName.Default];
+
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  // totalSales = [Model.measure(franchisedSalesIdentifier)
+    // .localIdentifier('franchisedSalesIdentifier')
+    // .format("#,##0")
+    // .title("Franchised Sales")];
+  // defaultMeasureValueFilter = Model.measureValueFilter('franchisedSalesIdentifier')
+
   state = {
-    filters: [this.defaultMeasureValueFilter],
+    filters: [],
   };
 
   onApply = filter => {
     this.filters = [filter];
     this.filterValue = filter;
     this.state = {
-      filters: [this.defaultMeasureValueFilter]
+      filters: []
     }
     this.render();
+    // this.renderPivotTable([filter]);
   };
 
   protected getRootDomNode() {
@@ -70,33 +85,37 @@ export class MeasureValueFilterComponentExampleComponent implements OnInit {
   protected getMeasureValueProps(): MeasureValueFilterProps {
     const { filters } = this.state;
     return {
-      projectId: projectId,
-      filter: this.filterValue ? this.filterValue : this.defaultMeasureValueFilter,
+      workspace: workspace,
+      backend: backend,
+      filter: this.filterValue ? this.filterValue : filters[0],
       onApply: this.onApply,
-      buttonTitle: "Franchised Sales",
+      buttonTitle: this.measureTitle,
+      measureIdentifier: measureLocalId(LdmExt.FranchisedSales)
     };
   }
 
-  protected getPivotTableProps(): PivotTableBucketProps {
+  protected getPivotTableProps(filters): PivotTableBucketProps {
+    // const { filters } = this.state;
     return {
-      projectId: projectId,
+      workspace: workspace,
+      backend: backend,
       measures: this.totalSales,
-      rows: [this.locationResort],
-      filters: this.filters,
+      rows: this.locationResort,
+      filters: filters,
     };
   }
 
   protected render() {
     this.renderFilterValue();
-    this.renderPivotTable();
+    this.renderPivotTable(this.filters);
   }
 
   public renderFilterValue() {
     ReactDOM.render(React.createElement(MeasureValueFilter, this.getMeasureValueProps()), this.getRootDomNode());
   }
 
-  public renderPivotTable() {
-    ReactDOM.render(React.createElement(PivotTable, this.getPivotTableProps()), this.getTableDataNode());
+  public renderPivotTable(filters) {
+    ReactDOM.render(React.createElement(PivotTable, this.getPivotTableProps(filters)), this.getTableDataNode());
   }
 
   ngOnInit() {

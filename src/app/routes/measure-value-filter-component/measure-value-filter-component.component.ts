@@ -53,13 +53,13 @@ export class MeasureValueFilterComponentComponent implements OnInit {
       html:MeasureValueFilterComponentShowInPercentComponentHTML,
       css: MeasureValueFilterComponentShowInPercentComponentCSS
     },
-    {
-      content: 'This example shows the visualization for setting up a measure value filter.',
-      for: VisualizationHasMvfComponent,
-      ts: VisualizationHasMfvComponentSRC,
-      html:VisualizationHasMfvComponentHTML,
-      css: VisualizationHasMfvComponentCSS
-    }
+    // {
+    //   content: 'This example shows the visualization for setting up a measure value filter.',
+    //   for: VisualizationHasMvfComponent,
+    //   ts: VisualizationHasMfvComponentSRC,
+    //   html:VisualizationHasMfvComponentHTML,
+    //   css: VisualizationHasMfvComponentCSS
+    // }
   ];
 
   measureValueFilterCustomArray = [

@@ -3,12 +3,23 @@ import * as ReactDOM from 'react-dom';
 import * as uuid from 'uuid';
 import * as invariant from 'invariant';
 import { Component, Input, OnInit, OnDestroy, OnChanges, AfterViewInit } from '@angular/core';
-import { PivotTable, Model,MeasureValueFilterDropdown } from '@gooddata/react-components';
+// import { PivotTable, Model,MeasureValueFilterDropdown } from '@gooddata/react-components';
 import { projectId, locationNameDisplayFormIdentifier, franchisedSalesIdentifier } from '../../../utils/fixtures';
 import classNames from "classnames";
 
+import { MeasureValueFilter } from "@gooddata/sdk-ui-filters";
+import { MeasureValueFilterDropdown } from "@gooddata/sdk-ui-filters";
+import { PivotTable } from "@gooddata/sdk-ui-pivot";
+import { newMeasureValueFilter, measureIdentifier, idRef } from "@gooddata/sdk-model";
+import { measureLocalId } from "@gooddata/sdk-model";
+import { Ldm, LdmExt } from "../../../ldm";
+import { workspace } from "../../../utils/fixtures";
+import bearFactory, { ContextDeferredAuthProvider } from "@gooddata/sdk-backend-bear";
+const backend = bearFactory().withAuthentication(new ContextDeferredAuthProvider());
+
 export interface PivotTableBucketProps {
-  projectId: any;
+  backend: any;
+  workspace: any;
   measures?: any[];
   rows?: any[];
   columns?: any[];
@@ -18,11 +29,13 @@ export interface PivotTableBucketProps {
 }
 
 export interface MeasureValueFilterDropdownProps{
-  projectId: any;
+  backend: any;
+  workspace: any;
   filter: any;
   onApply: any;
   onCancel: any;
   anchorEl: any;
+  measureIdentifier: any;
 }
 
 const DropdownButton = ({isActive,measureTitle,onClick}) => {
@@ -57,12 +70,16 @@ export class MeasureValueFilterDropdownComponent implements OnInit, OnDestroy, O
   displayDropdown: boolean;
   filters: any[];
   filterValue:any;
-  totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSalesIdentifier').format('#,##0').title("Franchised Sales");
-  locationResort = Model.attribute(locationNameDisplayFormIdentifier);
-  defaultMeasureValueFilter = Model.measureValueFilter('franchisedSalesIdentifier');
+  totalSales = [LdmExt.FranchisedSales];
+  locationResort = [Ldm.LocationName.Default];
+
+  // totalSales = Model.measure(franchisedSalesIdentifier).localIdentifier('franchisedSalesIdentifier').format('#,##0').title("Franchised Sales");
+  // locationResort = Model.attribute(locationNameDisplayFormIdentifier);
+  
+  // defaultMeasureValueFilter = Model.measureValueFilter('franchisedSalesIdentifier');
   state = {
     displayDropdown: false,
-    filters: [this.defaultMeasureValueFilter],
+    filters: [],
   };
 
 onApply = filter => {
@@ -70,7 +87,7 @@ onApply = filter => {
     this.filterValue= filter;
     this.state ={
       displayDropdown: !this.state.displayDropdown,
-      filters:  [this.defaultMeasureValueFilter]
+      filters:  []
     }
     this.render();   
 };
@@ -79,7 +96,7 @@ onCancel = () => {
   this.displayDropdown= false;
   this.state ={
     displayDropdown: !this.state.displayDropdown,
-    filters:  [this.defaultMeasureValueFilter]
+    filters:  []
   }
  this.renderFilterValue();
 };
@@ -87,7 +104,7 @@ onCancel = () => {
 toggleDropdown = () => {    
     this.state = {
       displayDropdown: !this.state.displayDropdown,
-      filters:  [this.defaultMeasureValueFilter]      
+      filters:  []      
     }
     this.render();
 };
@@ -113,12 +130,15 @@ toggleDropdown = () => {
 
 //---------------Get Component-------------
   protected getMeasureValueProps(): MeasureValueFilterDropdownProps {
+    const { filters } = this.state;
     return {
       anchorEl: this.getButtonNode().getElementsByTagName('button')[0],
-      projectId: projectId,
-      filter: this.filterValue ? this.filterValue: this.defaultMeasureValueFilter,
+      workspace: workspace,
+      backend: backend,
+      filter: this.filterValue ? this.filterValue: filters[0],
       onApply: this.onApply,
-      onCancel: this.onCancel,    
+      onCancel: this.onCancel, 
+      measureIdentifier: measureLocalId(LdmExt.FranchisedSales),   
     };
   }
 
@@ -133,9 +153,10 @@ toggleDropdown = () => {
 
   protected getPivotTableProps(): PivotTableBucketProps {
     return {
-      projectId: projectId,
-      measures: [this.totalSales],
-      rows: [this.locationResort],
+      workspace: workspace,
+      backend: backend,
+      measures: this.totalSales,
+      rows: this.locationResort,
       filters: this.filters,
     };
   }
